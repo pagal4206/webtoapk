@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% set body_class = "auth-page" %}
+
+{% block body %}
+<main class="auth-shell compact">
+    <section class="auth-panel auth-panel-form solo">
+        <div class="auth-header">
+            <div class="eyebrow">System Notice</div>
+            <h2>{{ title or "Error" }}</h2>
+            <p>{{ message }}</p>
+        </div>
+        <div class="form-actions">
+            <a class="primary-button" href="/login">Go to Login</a>
+            <a class="ghost-button" href="/">Open Dashboard</a>
+        </div>
+    </section>
+</main>
+{% endblock %}

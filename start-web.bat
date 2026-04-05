@@ -4,8 +4,13 @@ setlocal
 set "PROJECT_DIR=%~dp0"
 
 if "%REMOTE_BUILDER_BASE_URL%"=="" if not "%~1"=="" set "REMOTE_BUILDER_BASE_URL=%~1"
+if "%MONGODB_URL%"=="" if not "%~2"=="" set "MONGODB_URL=%~2"
 if "%REMOTE_BUILDER_BASE_URL%"=="" (
   echo Set REMOTE_BUILDER_BASE_URL before running this script or pass it as the first argument.
+  exit /b 1
+)
+if "%MONGODB_URL%"=="" (
+  echo Set MONGODB_URL before running this script or pass it as the second argument.
   exit /b 1
 )
 
@@ -13,4 +18,4 @@ if "%PORT%"=="" set "PORT=8090"
 
 cd /d "%PROJECT_DIR%"
 python -m pip install -r requirements.txt || exit /b 1
-python app.py
+python -m portal_app

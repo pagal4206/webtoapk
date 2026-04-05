@@ -40,6 +40,11 @@ async function fetchJson(url, options) {
   const response = await fetch(url, options);
   const data = await response.json().catch(() => ({}));
 
+  if (response.status === 401) {
+    window.location.href = "/login";
+    throw new Error("Your session expired. Please login again.");
+  }
+
   if (!response.ok) {
     throw new Error(data.message || "Request failed");
   }
@@ -123,7 +128,7 @@ function renderJob(snapshot) {
 
   progressBar.style.width = `${progress}%`;
   progressValue.textContent = `${progress}%`;
-  progressStep.textContent = snapshot?.step || "Waiting for a build submission";
+  progressStep.textContent = snapshot?.step || "No build running right now.";
   summaryApp.textContent = snapshot?.appName || "No active build";
   summaryPackage.textContent = snapshot?.applicationId || "-";
   summaryJob.textContent = snapshot?.id || "-";
@@ -271,12 +276,12 @@ function scheduleSubmitHints() {
   clearSubmitHints();
   submitHintTimers.push(window.setTimeout(() => {
     if (submitButton.disabled) {
-      formMessage.textContent = "Codespace wake ho raha hai. Remote builder ready hote hi job queue ho jayegi.";
+      formMessage.textContent = "Build service prepare ho rahi hai. Ready hote hi request queue me chali jayegi.";
     }
   }, 3500));
   submitHintTimers.push(window.setTimeout(() => {
     if (submitButton.disabled) {
-      formMessage.textContent = "Abhi bhi Codespace start ya builder handshake chal raha hai. Thoda aur wait karein.";
+      formMessage.textContent = "Remote build environment abhi initialize ho raha hai. Thoda aur wait karein.";
     }
   }, 15000));
 }
@@ -295,7 +300,7 @@ form.addEventListener("submit", async (event) => {
 
   submitButton.disabled = true;
   submitButton.textContent = "Submitting...";
-  formMessage.textContent = "Heroku request receive kar raha hai aur Codespace builder ko prepare kar raha hai...";
+  formMessage.textContent = "Request receive ho gayi hai aur protected build workflow start ho raha hai...";
   errorPanel.classList.add("hidden");
   downloadPanel.classList.add("hidden");
   scheduleSubmitHints();

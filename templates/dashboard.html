@@ -1,0 +1,203 @@
+{% extends "layout.html" %}
+{% set body_class = "dashboard-page" %}
+{% set page_script = "/app.js" %}
+
+{% block body %}
+<div class="dashboard-bg dashboard-bg-a"></div>
+<div class="dashboard-bg dashboard-bg-b"></div>
+
+<main class="dashboard-shell">
+    <header class="topbar">
+        <div class="brand-block">
+            <div class="brand-mark small">AC</div>
+            <div>
+                <div class="eyebrow">Private Build Portal</div>
+                <strong>APK Cloud Launchpad</strong>
+            </div>
+        </div>
+
+        <div class="user-block">
+            <div class="user-avatar">{{ user.initials }}</div>
+            <div class="user-copy">
+                <strong>{{ user.fullName }}</strong>
+                <span>{{ user.email }}</span>
+            </div>
+            <form method="post" action="/logout">
+                <button type="submit" class="ghost-button">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <section class="hero-card">
+        <div>
+            <div class="eyebrow">Operations Console</div>
+            <h1>Build branded Android APKs from secure website submissions.</h1>
+            <p class="hero-copy">
+                Submit website details, launch the remote build pipeline, monitor progress in real time, and keep
+                Codespaces wake behavior automated only when required.
+            </p>
+        </div>
+        <div class="hero-badges">
+            <span class="capsule">MongoDB login</span>
+            <span class="capsule">Protected API routes</span>
+            {% if codespace_enabled %}
+            <span class="capsule accent">Codespace auto wake enabled</span>
+            {% else %}
+            <span class="capsule">Manual builder mode</span>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="dashboard-grid">
+        <section class="surface-card form-card">
+            <div class="section-head">
+                <div>
+                    <div class="eyebrow">Create Build</div>
+                    <h2>Submit app details</h2>
+                </div>
+                <span class="capsule accent">Authenticated Session</span>
+            </div>
+
+            <form id="buildForm" class="build-form">
+                <label class="field">
+                    <span>App Name</span>
+                    <input type="text" name="appName" placeholder="My Business App" maxlength="60" required>
+                </label>
+
+                <label class="field">
+                    <span>Website URL</span>
+                    <input type="url" name="websiteUrl" placeholder="https://example.com" required>
+                </label>
+
+                <div class="field-grid">
+                    <div class="field">
+                        <span>Upload Icon</span>
+                        <label class="upload-box" for="iconFile">
+                            <input id="iconFile" type="file" name="iconFile" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+                            <strong>Select app icon</strong>
+                            <span>PNG or JPG, max 5MB</span>
+                        </label>
+                    </div>
+
+                    <label class="field">
+                        <span>Or Icon URL</span>
+                        <input type="url" name="iconUrl" placeholder="https://example.com/icon.png">
+                    </label>
+                </div>
+
+                <div class="icon-preview hidden" id="iconPreviewWrap">
+                    <img id="iconPreview" alt="Icon preview">
+                    <div>
+                        <strong>Icon preview</strong>
+                        <p id="iconPreviewMeta">Selected artwork will be used for launcher and splash assets.</p>
+                    </div>
+                </div>
+
+                <details class="advanced-panel">
+                    <summary>Advanced options</summary>
+                    <div class="advanced-grid">
+                        <label class="field">
+                            <span>Application ID Override</span>
+                            <input type="text" name="applicationId" placeholder="com.company.app" maxlength="120">
+                        </label>
+                        <label class="field">
+                            <span>Version Name</span>
+                            <input type="text" name="versionName" value="1.0.0">
+                        </label>
+                        <label class="field">
+                            <span>Version Code</span>
+                            <input type="number" name="versionCode" min="1" value="1">
+                        </label>
+                        <label class="field">
+                            <span>Min SDK</span>
+                            <input type="number" name="minSdk" min="21" max="36" value="21">
+                        </label>
+                        <label class="field">
+                            <span>Icon Background</span>
+                            <input type="text" name="iconBackgroundColor" value="#FFFFFF" pattern="^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$">
+                        </label>
+                        <label class="field">
+                            <span>User Agent Suffix</span>
+                            <input type="text" name="userAgentSuffix" placeholder="Optional" maxlength="80">
+                        </label>
+                    </div>
+                    <label class="checkbox">
+                        <input type="checkbox" name="allowCleartext" value="true">
+                        <span>Allow HTTP / cleartext websites</span>
+                    </label>
+                </details>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-button" id="submitButton">Build APK</button>
+                    <p class="form-note" id="formMessage" aria-live="polite">Ready to submit a new secure build request.</p>
+                </div>
+            </form>
+        </section>
+
+        <section class="side-stack">
+            <section class="surface-card status-card">
+                <div class="section-head">
+                    <div>
+                        <div class="eyebrow">Live Status</div>
+                        <h2>Current build</h2>
+                    </div>
+                    <span class="status-badge idle" id="stateBadge">Idle</span>
+                </div>
+
+                <div class="progress-shell">
+                    <div class="progress-track">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <div class="progress-meta">
+                        <strong id="progressValue">0%</strong>
+                        <span id="progressStep">No build running right now.</span>
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div>
+                        <span class="summary-label">App</span>
+                        <strong id="summaryApp">No active build</strong>
+                    </div>
+                    <div>
+                        <span class="summary-label">Package</span>
+                        <strong id="summaryPackage">-</strong>
+                    </div>
+                    <div>
+                        <span class="summary-label">Job ID</span>
+                        <strong id="summaryJob">-</strong>
+                    </div>
+                </div>
+
+                <div class="download-panel hidden" id="downloadPanel">
+                    <a id="downloadLink" class="primary-button full-width" href="#" download>Download Ready APK</a>
+                    <p>Your APK is ready. Download it directly from the protected build endpoint.</p>
+                </div>
+
+                <div class="error-panel hidden" id="errorPanel">
+                    <strong>Build failed</strong>
+                    <p id="errorMessage">Please review the logs and update your build input.</p>
+                </div>
+
+                <div class="logs-panel">
+                    <div class="logs-head">
+                        <span>Build log</span>
+                        <button class="ghost-button" id="refreshButton" type="button">Refresh</button>
+                    </div>
+                    <pre id="logOutput">No logs yet.</pre>
+                </div>
+            </section>
+
+            <section class="surface-card recent-card">
+                <div class="section-head">
+                    <div>
+                        <div class="eyebrow">Recent Builds</div>
+                        <h2>Queue overview</h2>
+                    </div>
+                </div>
+                <div id="recentBuilds" class="recent-list"></div>
+            </section>
+        </section>
+    </section>
+</main>
+{% endblock %}

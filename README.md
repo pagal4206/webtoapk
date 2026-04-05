@@ -1,93 +1,109 @@
 # APK Cloud Launchpad for Heroku
 
-Ye folder ab proper standalone Heroku app package hai. Isko alag GitHub repo ke root me rakh do, phir `app.json` + Deploy Button ke through one-click deploy flow use ho jayega.
+Ye package ab standalone Flask + MongoDB Heroku app hai jisme:
+
+- user registration page
+- login page
+- protected build dashboard
+- MongoDB-based users and sessions
+- remote builder proxy
+- optional Codespace auto-wake and auto-stop
 
 <p align="center"><a href="https://dashboard.heroku.com/new?template=https://github.com/pagal4206/webtoapk"> <img src="https://img.shields.io/badge/Deploy%20On%20Heroku-bringle?style=for-the-badge&logo=heroku" width="220" height="38.45"/></a></p>
 
-## Deploy Button use karne se pehle
+## Heroku deploy button
 
-- Ye folder GitHub repo ke root me hona chahiye.
-- Repo me valid `app.json` root par hona chahiye.
-- Repo me Git submodules nahi hone chahiye.
-- Heroku Button Cedar-generation app create karta hai; Fir ke liye nahi.
+Deploy button use karne ke liye is folder ko GitHub repo ke root me rakho. Agar aap manual template URL use karna chahte ho:
 
-Agar aap button ko GitHub README ke bahar use karna chahte ho, to explicit template URL use karo:
+```text
+https://www.heroku.com/deploy?template=https://github.com/<owner>/<repo>
+```
 
-## Is package me kya ready hai
-
-- `app.py` Flask web app aur API proxy
-- `requirements.txt` Python dependencies
-- `.python-version` Heroku Python runtime selector
-- `Procfile` dyno start command
-- `app.json` Heroku manifest for one-click deploy
-- `.env.example` sample config vars
-- `src/main/resources/public/` static frontend assets
-
-## Heroku one-click deploy
-
-Deploy ke time Heroku `app.json` ke basis par config vars prompt karega.
+## `app.json` me kya prompt hoga
 
 Required:
 
 ```text
-REMOTE_BUILDER_BASE_URL=https://your-codespace-builder-url
+REMOTE_BUILDER_BASE_URL=https://your-builder-url
+MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/apk_cloud_launchpad
 ```
 
 Optional:
 
 ```text
-REMOTE_BUILDER_TOKEN=match-builder-shared-secret
 GITHUB_ACCESS_TOKEN=ghp_xxx
 GITHUB_CODESPACE_NAME=your-codespace-name
-GITHUB_API_BASE_URL=https://api.github.com
-GITHUB_API_VERSION=2022-11-28
+```
+
+## Hidden advanced envs
+
+Ye `app.json` me prompt nahi hote, lekin manually set kiye ja sakte hain:
+
+```text
+REMOTE_BUILDER_TOKEN=match-builder-shared-secret
 REMOTE_BUILDER_HEALTH_PATH=/health
 BUILDER_REQUEST_TIMEOUT_SECONDS=900
 CODESPACE_START_TIMEOUT_SECONDS=180
 CODESPACE_WAKE_COOLDOWN_SECONDS=15
+CODESPACE_IDLE_SHUTDOWN_SECONDS=90
+CODESPACE_AUTO_STOP_ENABLED=true
+SESSION_TTL_DAYS=30
 API_RATE_LIMIT_MAX_REQUESTS=60
 API_RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 ## Local run
 
-Quick start on Linux:
+Linux:
 
 ```bash
-bash start-web.sh https://your-codespace-builder-url
+bash start-web.sh https://your-builder-url mongodb+srv://username:password@cluster.mongodb.net/apk_cloud_launchpad
 ```
 
-Quick start on Windows:
+Windows:
 
 ```powershell
-.\start-web.bat https://your-codespace-builder-url
+.\start-web.bat https://your-builder-url mongodb+srv://username:password@cluster.mongodb.net/apk_cloud_launchpad
 ```
+
+Ya `.env` file me `REMOTE_BUILDER_BASE_URL` aur `MONGODB_URL` dono set kar do.
 
 Manual run on Linux:
 
 ```bash
-export REMOTE_BUILDER_BASE_URL="https://your-codespace-builder-url"
+export REMOTE_BUILDER_BASE_URL="https://your-builder-url"
+export MONGODB_URL="mongodb+srv://username:password@cluster.mongodb.net/apk_cloud_launchpad"
 python3 -m pip install -r requirements.txt
 export PORT=8090
-python3 app.py
+python3 -m portal_app
 ```
 
 Manual run on Windows:
 
 ```powershell
-$env:REMOTE_BUILDER_BASE_URL='https://your-codespace-builder-url'
+$env:REMOTE_BUILDER_BASE_URL='https://your-builder-url'
+$env:MONGODB_URL='mongodb+srv://username:password@cluster.mongodb.net/apk_cloud_launchpad'
 python -m pip install -r requirements.txt
 $env:PORT='8090'
-python app.py
+python -m portal_app
 ```
 
-`.env` file rakhoge to app local run ke time usko auto-load kar lega.
+## UI and auth flow
 
-## Heroku notes
+- `/register` par naya user create hota hai
+- `/login` par existing user sign in karta hai
+- `/` sirf authenticated users ke liye protected dashboard hai
+- user sessions MongoDB-backed token system se manage hoti hain
 
-- `Procfile` gunicorn ko Heroku `$PORT` par bind karta hai aur request logs stdout/stderr me bhejta hai.
-- `.python-version` currently `3.14` use karta hai, jo Heroku ke current recommended major runtime flow ke saath align hai.
-- `requirements.txt` aur `.python-version` root par hone ki wajah se Heroku Python buildpack app ko detect kar leta hai.
-- `PORT` Heroku khud set karta hai, isliye usko Heroku config var ke roop me manually set karne ki zarurat nahi hoti.
-- `REMOTE_BUILDER_TOKEN` ko builder service ke `BUILDER_SHARED_SECRET` ke saath same rakho agar builder API private rakhni hai.
-- Public-facing API defaults ke saath rate limited hai, isliye burst abuse par `429` response milega.
+## Codespace behavior
+
+- Agar `GITHUB_ACCESS_TOKEN` aur `GITHUB_CODESPACE_NAME` set hain, to builder sleep hone par auto-wake ho jayega
+- Jab active jobs finish ho jaati hain, app idle delay ke baad Codespace stop request bhej deta hai
+- Next authenticated build request par Codespace fir se wake ho sakta hai
+
+## Runtime notes
+
+- `Procfile` gunicorn ko `portal_app:app` se run karta hai
+- `requirements.txt` me `pymongo` aur `dnspython` added hain taki MongoDB Atlas/SRV URL chale
+- `PORT` Heroku khud set karta hai
+- Frontend browser me render hota hai, isliye source ko 100% hide nahi kiya ja sakta; real protection auth, backend logic, aur secure headers se aati hai

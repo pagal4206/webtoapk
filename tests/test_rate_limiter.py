@@ -1,9 +1,10 @@
 import os
 import unittest
 
+os.environ.setdefault("MONGODB_URL", "mongodb://example.com/apk_cloud_launchpad")
 os.environ.setdefault("REMOTE_BUILDER_BASE_URL", "https://example.com")
 
-from app import ApiRateLimiter, RateLimitExceededError
+from portal_app import ApiRateLimiter, RateLimitExceededError
 
 
 class ApiRateLimiterTest(unittest.TestCase):

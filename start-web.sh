@@ -14,8 +14,12 @@ if [[ $# -gt 0 && -z "${REMOTE_BUILDER_BASE_URL:-}" ]]; then
   export REMOTE_BUILDER_BASE_URL="$1"
 fi
 
-if [[ -z "${REMOTE_BUILDER_BASE_URL:-}" ]]; then
-  echo "Set REMOTE_BUILDER_BASE_URL in .env, export it, or pass it as the first argument."
+if [[ $# -gt 1 && -z "${MONGODB_URL:-}" ]]; then
+  export MONGODB_URL="$2"
+fi
+
+if [[ -z "${REMOTE_BUILDER_BASE_URL:-}" || -z "${MONGODB_URL:-}" ]]; then
+  echo "Set REMOTE_BUILDER_BASE_URL and MONGODB_URL in .env, export them, or pass them as the first two arguments."
   exit 1
 fi
 
@@ -35,4 +39,4 @@ if [[ -z "$PYTHON_BIN" ]]; then
 fi
 
 "$PYTHON_BIN" -m pip install -r requirements.txt
-exec "$PYTHON_BIN" app.py
+exec "$PYTHON_BIN" -m portal_app

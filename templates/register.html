@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% set body_class = "auth-page" %}
+
+{% block body %}
+<main class="auth-shell">
+    <section class="auth-panel auth-panel-brand">
+        <div class="brand-mark">AC</div>
+        <div class="eyebrow">Create Your Workspace</div>
+        <h1>Register a new account and unlock the private APK build dashboard.</h1>
+        <p class="hero-copy">
+            Your credentials are stored securely in MongoDB, while build operations stay protected behind authenticated
+            routes and controlled API access.
+        </p>
+        <div class="feature-list">
+            <div class="feature-card">
+                <strong>MongoDB Accounts</strong>
+                <span>User records and sessions are managed server-side.</span>
+            </div>
+            <div class="feature-card">
+                <strong>Codespace Smart Wake</strong>
+                <span>Builder wakes only when authenticated users start real work.</span>
+            </div>
+            <div class="feature-card">
+                <strong>Clean Operations UI</strong>
+                <span>Orange-white interface with black text for a polished professional feel.</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="auth-panel auth-panel-form">
+        <div class="auth-header">
+            <div class="eyebrow">New Account</div>
+            <h2>Register</h2>
+            <p>Create your secure login to access the build portal.</p>
+        </div>
+
+        {% if error %}
+        <div class="form-alert">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="/register" class="auth-form">
+            <input type="hidden" name="next" value="{{ next_target or '' }}">
+            <label class="field">
+                <span>Full Name</span>
+                <input type="text" name="fullName" value="{{ form_values.fullName or '' }}" placeholder="Your name" maxlength="80" required>
+            </label>
+            <label class="field">
+                <span>Email Address</span>
+                <input type="email" name="email" value="{{ form_values.email or '' }}" placeholder="you@example.com" required>
+            </label>
+            <label class="field">
+                <span>Password</span>
+                <input type="password" name="password" placeholder="At least 8 characters" required>
+            </label>
+            <label class="field">
+                <span>Confirm Password</span>
+                <input type="password" name="confirmPassword" placeholder="Re-enter password" required>
+            </label>
+            <button type="submit" class="primary-button full-width">Create Account</button>
+        </form>
+
+        <p class="auth-switch">
+            Already have an account?
+            <a href="/login">Login here</a>
+        </p>
+    </section>
+</main>
+{% endblock %}

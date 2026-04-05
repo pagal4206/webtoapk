@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
     <title>APK Cloud Launchpad</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,20 +17,20 @@
 
     <main class="shell">
         <section class="hero card">
-            <div class="eyebrow">Heroku Web + Codespaces Builder</div>
-            <h1>Run the website on Heroku and let GitHub Codespaces build the APK for you.</h1>
+            <div class="eyebrow">Secure Build Portal</div>
+            <h1>Submit website details and generate a packaged Android app from one secure dashboard.</h1>
             <p class="hero-copy">
-                Submit app name, website URL, and icon. This web layer can wake your GitHub Codespace, forward the build request
-                to the remote APK template, and stream progress back here until the ready APK is downloadable.
+                Submit app name, website URL, and icon. The platform validates your request, starts the build workflow,
+                and keeps progress visible here until the final APK is ready to download.
             </p>
             <div class="hero-metrics">
                 <div class="metric">
-                    <span class="metric-label">Frontend</span>
-                    <strong>Heroku-ready website</strong>
+                    <span class="metric-label">Access</span>
+                    <strong>Protected website</strong>
                 </div>
                 <div class="metric">
-                    <span class="metric-label">Builder</span>
-                    <strong>Codespace wake + proxy</strong>
+                    <span class="metric-label">Workflow</span>
+                    <strong>Managed build queue</strong>
                 </div>
                 <div class="metric">
                     <span class="metric-label">Output</span>
@@ -45,7 +46,7 @@
                         <div class="eyebrow">Create Build</div>
                         <h2>Submit your app details</h2>
                     </div>
-                    <span class="pill">Heroku -> Codespaces</span>
+                    <span class="pill">Private Portal</span>
                 </div>
 
                 <form id="buildForm" class="build-form">
@@ -119,7 +120,7 @@
 
                     <div class="form-actions">
                         <button type="submit" class="primary-button" id="submitButton">Build APK</button>
-                        <p class="form-note" id="formMessage" aria-live="polite">Heroku website pe request aayegi, Codespace builder wake hoga, aur ready APK yahin return hogi.</p>
+                        <p class="form-note" id="formMessage" aria-live="polite">Request secure build service ko jayegi, processing start hogi, aur ready APK yahin return hogi.</p>
                     </div>
                 </form>
             </section>

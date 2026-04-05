@@ -1,6 +1,9 @@
+"""Compatibility wrapper.
 from __future__ import annotations
 
+import base64
 import os
+import secrets
 import threading
 import time
 from collections import defaultdict, deque
@@ -24,6 +27,10 @@ class BuilderUnavailableError(RuntimeError):
     pass
 
 
+class SiteAccessDeniedError(RuntimeError):
+    pass
+
+
 class RateLimitExceededError(RuntimeError):
     def __init__(self, message: str, retry_after_seconds: int) -> None:
         super().__init__(message)
@@ -34,6 +41,8 @@ class RateLimitExceededError(RuntimeError):
 class HerokuWebConfig:
     service_root: Path
     port: int
+    site_basic_auth_username: Optional[str]
+    site_basic_auth_password: Optional[str]
     remote_builder_base_url: str
     remote_builder_health_path: str
     remote_builder_token: Optional[str]
@@ -52,6 +61,8 @@ class HerokuWebConfig:
         return cls(
             service_root=service_root.resolve(),
             port=parse_positive_int("PORT", parse_positive_int("WEB_PORT", 8080)),
+            site_basic_auth_username=first_non_blank(os.getenv("SITE_BASIC_AUTH_USERNAME")),
+            site_basic_auth_password=first_non_blank(os.getenv("SITE_BASIC_AUTH_PASSWORD")),
             remote_builder_base_url=require_env("REMOTE_BUILDER_BASE_URL").rstrip("/"),
             remote_builder_health_path=normalize_path(first_non_blank(os.getenv("REMOTE_BUILDER_HEALTH_PATH")) or "/health"),
             remote_builder_token=first_non_blank(os.getenv("REMOTE_BUILDER_TOKEN")),
@@ -69,10 +80,14 @@ class HerokuWebConfig:
     def wake_enabled(self) -> bool:
         return bool(self.github_access_token and self.github_codespace_name)
 
+    def site_basic_auth_enabled(self) -> bool:
+        return bool(self.site_basic_auth_username and self.site_basic_auth_password)
+
     def describe_environment(self) -> Dict[str, object]:
         return {
             "serviceRoot": str(self.service_root),
             "port": self.port,
+            "siteBasicAuthEnabled": self.site_basic_auth_enabled(),
             "remoteBuilderBaseUrl": self.remote_builder_base_url,
             "remoteBuilderHealthPath": self.remote_builder_health_path,
             "remoteBuilderTokenConfigured": bool(self.remote_builder_token),
@@ -260,6 +275,7 @@ def create_app() -> Flask:
 
     @app.before_request
     def apply_request_guards():
+        enforce_site_basic_auth(config)
         if request.path.startswith("/api/"):
             rate_limiter.check(resolve_client_key())
 
@@ -270,6 +286,10 @@ def create_app() -> Flask:
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        response.headers["Origin-Agent-Cluster"] = "?1"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self'; "
@@ -281,6 +301,12 @@ def create_app() -> Flask:
     @app.errorhandler(BuilderUnavailableError)
     def handle_builder_unavailable(error: BuilderUnavailableError):
         return jsonify({"message": str(error)}), 503
+
+    @app.errorhandler(SiteAccessDeniedError)
+    def handle_site_access_denied(error: SiteAccessDeniedError):
+        response = Response(str(error), status=401, mimetype="text/plain")
+        response.headers["WWW-Authenticate"] = 'Basic realm="APK Cloud Launchpad", charset="UTF-8"'
+        return response
 
     @app.errorhandler(RateLimitExceededError)
     def handle_rate_limit(error: RateLimitExceededError):
@@ -368,6 +394,27 @@ def resolve_client_key() -> str:
     return request.remote_addr or "unknown"
 
 
+def enforce_site_basic_auth(config: HerokuWebConfig) -> None:
+    if not config.site_basic_auth_enabled():
+        return
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Basic "):
+        raise SiteAccessDeniedError("Website access ke liye login required hai.")
+
+    encoded = auth_header[6:].strip()
+    try:
+        decoded = base64.b64decode(encoded, validate=True).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        raise SiteAccessDeniedError("Website access credentials invalid hain.") from None
+
+    username, separator, password = decoded.partition(":")
+    expected_username = config.site_basic_auth_username or ""
+    expected_password = config.site_basic_auth_password or ""
+    if not separator or not secrets.compare_digest(username, expected_username) or not secrets.compare_digest(password, expected_password):
+        raise SiteAccessDeniedError("Website access credentials invalid hain.")
+
+
 def load_env_file(env_path: Path) -> None:
     if not env_path.is_file():
         return
@@ -420,6 +467,15 @@ def parse_non_negative_int(name: str, default: int) -> int:
 
 
 app = create_app()
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "8090")))
+"""
+
+import os
+
+from portal_app import app, create_app
 
 
 if __name__ == "__main__":
