@@ -2,7 +2,7 @@
 
 Ye folder ab proper standalone Heroku app package hai. Isko alag GitHub repo ke root me rakh do, phir `app.json` + Deploy Button ke through one-click deploy flow use ho jayega.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy)
+<p align="center"><a href="https://dashboard.heroku.com/new?template=https://github.com/pagal4206/pagal"> <img src="https://img.shields.io/badge/Deploy%20On%20Heroku-bringle?style=for-the-badge&logo=heroku" width="220" height="38.45"/></a></p>
 
 ## Deploy Button use karne se pehle
 
@@ -12,10 +12,6 @@ Ye folder ab proper standalone Heroku app package hai. Isko alag GitHub repo ke 
 - Heroku Button Cedar-generation app create karta hai; Fir ke liye nahi.
 
 Agar aap button ko GitHub README ke bahar use karna chahte ho, to explicit template URL use karo:
-
-```text
-https://www.heroku.com/deploy?template=https://github.com/pagal4206/webtoapk
-```
 
 ## Is package me kya ready hai
 
