@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APK Cloud Launchpad</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <div class="ambient ambient-c"></div>
+
+    <main class="shell">
+        <section class="hero card">
+            <div class="eyebrow">Heroku Web + Codespaces Builder</div>
+            <h1>Run the website on Heroku and let GitHub Codespaces build the APK for you.</h1>
+            <p class="hero-copy">
+                Submit app name, website URL, and icon. This web layer can wake your GitHub Codespace, forward the build request
+                to the remote APK template, and stream progress back here until the ready APK is downloadable.
+            </p>
+            <div class="hero-metrics">
+                <div class="metric">
+                    <span class="metric-label">Frontend</span>
+                    <strong>Heroku-ready website</strong>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Builder</span>
+                    <strong>Codespace wake + proxy</strong>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Output</span>
+                    <strong>Ready APK</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid">
+            <section class="card form-card">
+                <div class="section-head">
+                    <div>
+                        <div class="eyebrow">Create Build</div>
+                        <h2>Submit your app details</h2>
+                    </div>
+                    <span class="pill">Heroku -> Codespaces</span>
+                </div>
+
+                <form id="buildForm" class="build-form">
+                    <label class="field">
+                        <span>App Name</span>
+                        <input type="text" name="appName" placeholder="Google" value="Google" maxlength="60" required>
+                    </label>
+
+                    <label class="field">
+                        <span>Website URL</span>
+                        <input type="url" name="websiteUrl" placeholder="https://google.com" value="https://google.com" required>
+                    </label>
+
+                    <div class="field-group">
+                        <label class="field">
+                            <span>Upload Icon</span>
+                            <label class="upload-box" for="iconFile">
+                                <input id="iconFile" type="file" name="iconFile" accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+                                <strong>Drop icon here</strong>
+                                <span>PNG or JPG, max 5MB</span>
+                            </label>
+                        </label>
+
+                        <label class="field">
+                            <span>Or Icon URL</span>
+                            <input type="url" name="iconUrl" placeholder="https://domain.com/icon.png">
+                        </label>
+                    </div>
+
+                    <div class="icon-preview hidden" id="iconPreviewWrap">
+                        <img id="iconPreview" alt="Icon preview">
+                        <div>
+                            <strong>Icon preview</strong>
+                            <p id="iconPreviewMeta">Your uploaded or linked icon will be used for splash + launcher assets.</p>
+                        </div>
+                    </div>
+
+                    <details class="advanced">
+                        <summary>Advanced options</summary>
+                        <div class="advanced-grid">
+                            <label class="field">
+                                <span>Application ID Override</span>
+                                <input type="text" name="applicationId" placeholder="Leave blank for auto package" maxlength="120">
+                            </label>
+                            <label class="field">
+                                <span>Version Name</span>
+                                <input type="text" name="versionName" value="1.0.0">
+                            </label>
+                            <label class="field">
+                                <span>Version Code</span>
+                                <input type="number" name="versionCode" min="1" value="1">
+                            </label>
+                            <label class="field">
+                                <span>Min SDK</span>
+                                <input type="number" name="minSdk" min="21" max="36" value="21">
+                            </label>
+                            <label class="field">
+                                <span>Icon Background</span>
+                                <input type="text" name="iconBackgroundColor" value="#FFFFFF" pattern="^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$" title="Use #RGB, #RRGGBB, or #AARRGGBB">
+                            </label>
+                            <label class="field">
+                                <span>User Agent Suffix</span>
+                                <input type="text" name="userAgentSuffix" placeholder="Optional" maxlength="80">
+                            </label>
+                        </div>
+                        <label class="checkbox">
+                            <input type="checkbox" name="allowCleartext" value="true">
+                            <span>Allow HTTP / cleartext websites</span>
+                        </label>
+                    </details>
+
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button" id="submitButton">Build APK</button>
+                        <p class="form-note" id="formMessage" aria-live="polite">Heroku website pe request aayegi, Codespace builder wake hoga, aur ready APK yahin return hogi.</p>
+                    </div>
+                </form>
+            </section>
+
+            <section class="stack">
+                <section class="card status-card">
+                    <div class="section-head">
+                        <div>
+                            <div class="eyebrow">Live Status</div>
+                            <h2>Current build</h2>
+                        </div>
+                        <span class="status-badge idle" id="stateBadge">Idle</span>
+                    </div>
+
+                    <div class="progress-shell">
+                        <div class="progress-track">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="progress-meta">
+                            <strong id="progressValue">0%</strong>
+                            <span id="progressStep">Waiting for a build submission</span>
+                        </div>
+                    </div>
+
+                    <div class="build-summary">
+                        <div>
+                            <span class="summary-label">App</span>
+                            <strong id="summaryApp">No active build</strong>
+                        </div>
+                        <div>
+                            <span class="summary-label">Package</span>
+                            <strong id="summaryPackage">-</strong>
+                        </div>
+                        <div>
+                            <span class="summary-label">Job ID</span>
+                            <strong id="summaryJob">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="download-panel hidden" id="downloadPanel">
+                        <a id="downloadLink" class="primary-button" href="#" download>Download Ready APK</a>
+                        <p>The APK is built and stored on the server. Click to download it directly.</p>
+                    </div>
+
+                    <div class="error-panel hidden" id="errorPanel">
+                        <strong>Build failed</strong>
+                        <p id="errorMessage">Please review the logs and adjust the input if needed.</p>
+                    </div>
+
+                    <div class="logs-panel">
+                        <div class="logs-head">
+                            <span>Build log</span>
+                            <button class="ghost-button" id="refreshButton" type="button">Refresh</button>
+                        </div>
+                        <pre id="logOutput">No logs yet.</pre>
+                    </div>
+                </section>
+
+                <section class="card recent-card">
+                    <div class="section-head">
+                        <div>
+                            <div class="eyebrow">Recent Builds</div>
+                            <h2>Remote queue</h2>
+                        </div>
+                    </div>
+                    <div id="recentBuilds" class="recent-list"></div>
+                </section>
+            </section>
+        </section>
+    </main>
+
+    <script src="/app.js" defer></script>
+</body>
+</html>

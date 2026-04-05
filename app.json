@@ -1,0 +1,77 @@
+{
+  "name": "APK Cloud Launchpad",
+  "description": "One-click Heroku Flask proxy for the remote Codespaces APK builder.",
+  "keywords": [
+    "python",
+    "flask",
+    "heroku",
+    "apk",
+    "proxy",
+    "codespaces"
+  ],
+  "success_url": "/",
+  "stack": "heroku-24",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "REMOTE_BUILDER_BASE_URL": {
+      "description": "Public HTTPS URL of your running codespace-builder service.",
+      "required": true
+    },
+    "REMOTE_BUILDER_TOKEN": {
+      "description": "Optional shared secret. Use the same value as BUILDER_SHARED_SECRET on the builder service.",
+      "required": false
+    },
+    "GITHUB_ACCESS_TOKEN": {
+      "description": "Optional GitHub token used to auto-start the Codespace when the builder is sleeping.",
+      "required": false
+    },
+    "GITHUB_CODESPACE_NAME": {
+      "description": "Optional GitHub Codespace name to wake before forwarding build requests.",
+      "required": false
+    },
+    "GITHUB_API_BASE_URL": {
+      "description": "Optional GitHub API base URL.",
+      "value": "https://api.github.com",
+      "required": false
+    },
+    "GITHUB_API_VERSION": {
+      "description": "Optional GitHub API version header value.",
+      "value": "2022-11-28",
+      "required": false
+    },
+    "REMOTE_BUILDER_HEALTH_PATH": {
+      "description": "Health endpoint path on the builder service.",
+      "value": "/health",
+      "required": false
+    },
+    "BUILDER_REQUEST_TIMEOUT_SECONDS": {
+      "description": "Timeout in seconds for proxied builder requests.",
+      "value": "900",
+      "required": false
+    },
+    "CODESPACE_START_TIMEOUT_SECONDS": {
+      "description": "Maximum time in seconds to wait for the builder to become healthy after waking the Codespace.",
+      "value": "180",
+      "required": false
+    },
+    "CODESPACE_WAKE_COOLDOWN_SECONDS": {
+      "description": "Minimum delay between repeated wake attempts.",
+      "value": "15",
+      "required": false
+    },
+    "API_RATE_LIMIT_MAX_REQUESTS": {
+      "description": "Per-IP API request limit for the configured window.",
+      "value": "60",
+      "required": false
+    },
+    "API_RATE_LIMIT_WINDOW_SECONDS": {
+      "description": "Rate limit window size in seconds.",
+      "value": "60",
+      "required": false
+    }
+  }
+}
